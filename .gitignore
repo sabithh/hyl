@@ -1,0 +1,33 @@
+# Node
+**/node_modules/
+**/dist/
+**/.next/
+
+# Flutter / Dart
+**/.dart_tool/
+**/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+
+# IDE and OS
+**/.idea/
+**/.vscode/
+**/*.iml
+.DS_Store
+Thumbs.db
+
+# Logs
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.supabase.example
+
+# Local temporary backup while bootstrapping root git
+.owner-web-git-backup/

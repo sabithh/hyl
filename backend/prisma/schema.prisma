@@ -1,0 +1,669 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  owner
+  trainer
+  trainee
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum BloodGroup {
+  A_positive
+  A_negative
+  B_positive
+  B_negative
+  AB_positive
+  AB_negative
+  O_positive
+  O_negative
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  cancelled
+  frozen
+}
+
+enum PaymentStatus {
+  paid
+  pending
+  failed
+  refunded
+}
+
+enum PaymentMethod {
+  cash
+  card
+  upi
+  online
+  bank_transfer
+}
+
+enum AttendanceSource {
+  app_qr
+  manual
+  biometric
+}
+
+enum DayOfWeek {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+}
+
+enum SessionStatus {
+  booked
+  completed
+  cancelled
+  no_show
+}
+
+enum CampaignChannel {
+  push
+  whatsapp
+  sms
+  email
+}
+
+enum CampaignStatus {
+  draft
+  active
+  paused
+  completed
+}
+
+enum FreezeStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ReferralRewardType {
+  discount
+  free_days
+  merchandise
+  cash
+}
+
+enum ReferralRewardStatus {
+  pending
+  granted
+  expired
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model Gym {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  country       String?  @default("India")
+  pincode       String?
+  latitude      Float?
+  longitude     Float?
+  website       String?
+  logoUrl       String?  @map("logo_url")
+  coverPhotoUrl String?  @map("cover_photo_url")
+  openingTime   String?  @map("opening_time")
+  closingTime   String?  @map("closing_time")
+  maxCapacity   Int?     @map("max_capacity")
+  gstNumber     String?  @map("gst_number")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  users              User[]
+  membershipPlans    MembershipPlan[]
+  subscriptions      Subscription[]
+  payments           Payment[]
+  attendance         Attendance[]
+  workoutPlans       WorkoutPlan[]
+  exercises          Exercise[]
+  dietPlans          DietPlan[]
+  notifications      Notification[]
+  announcements      Announcement[]
+  referralRewards    ReferralReward[]
+  auditLogs          AuditLog[]
+  trainerSchedules   TrainerSchedule[]
+  sessionBookings    SessionBooking[]
+  groupClasses       GroupClass[]
+  feedbackRatings    FeedbackRating[]
+  marketingCampaigns MarketingCampaign[]
+  chatMessages       ChatMessage[]
+
+  @@map("gyms")
+}
+
+model User {
+  id                    String      @id @default(uuid())
+  gymId                 String      @map("gym_id")
+  email                 String      @unique
+  phone                 String?
+  passwordHash          String      @map("password_hash")
+  name                  String
+  role                  UserRole
+  gender                Gender?
+  dateOfBirth           DateTime?   @map("date_of_birth")
+  profilePicUrl         String?     @map("profile_pic_url")
+  address               String?
+  heightCm              Float?      @map("height_cm")
+  bloodGroup            BloodGroup? @map("blood_group")
+  emergencyContactName  String?     @map("emergency_contact_name")
+  emergencyContactPhone String?     @map("emergency_contact_phone")
+  medicalConditions     String?     @map("medical_conditions")
+  qrCode                String?     @unique @map("qr_code")
+  referralCode          String?     @unique @map("referral_code")
+  referredBy            String?     @map("referred_by")
+  joinDate              DateTime    @default(now()) @map("join_date")
+  isActive              Boolean     @default(true) @map("is_active")
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
+
+  // Trainer-specific: which trainer is assigned to this trainee
+  assignedTrainerId String? @map("assigned_trainer_id")
+  assignedTrainer   User?   @relation("TrainerTrainees", fields: [assignedTrainerId], references: [id])
+  trainees          User[]  @relation("TrainerTrainees")
+
+  // Relations
+  gym                    Gym                @relation(fields: [gymId], references: [id])
+  subscriptions          Subscription[]
+  payments               Payment[]
+  attendanceRecords      Attendance[]
+  createdWorkoutPlans    WorkoutPlan[]      @relation("TrainerWorkoutPlans")
+  assignedWorkoutPlans   WorkoutPlan[]      @relation("TraineeWorkoutPlans")
+  createdDietPlans       DietPlan[]         @relation("TrainerDietPlans")
+  assignedDietPlans      DietPlan[]         @relation("TraineeDietPlans")
+  notifications          Notification[]
+  sentMessages           ChatMessage[]      @relation("SentMessages")
+  receivedMessages       ChatMessage[]      @relation("ReceivedMessages")
+  trainerSchedules       TrainerSchedule[]
+  trainerBookings        SessionBooking[]   @relation("TrainerSessions")
+  traineeBookings        SessionBooking[]   @relation("TraineeSessions")
+  instructedClasses      GroupClass[]
+  classEnrollments       ClassEnrollment[]
+  givenFeedback          FeedbackRating[]   @relation("FeedbackGiver")
+  receivedFeedback       FeedbackRating[]   @relation("FeedbackReceiver")
+  referralsMade          ReferralReward[]   @relation("Referrer")
+  referralsReceived      ReferralReward[]   @relation("Referred")
+  auditLogs              AuditLog[]
+  subscriptionFreezes    SubscriptionFreeze[] @relation("FreezeRequester")
+  approvedFreezes        SubscriptionFreeze[] @relation("FreezeApprover")
+  nutritionLogs          NutritionLog[]
+  progressLogs           ProgressLog[]
+  trainerProfile         TrainerProfile?
+
+  @@index([gymId])
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model TrainerProfile {
+  id               String  @id @default(uuid())
+  userId           String  @unique @map("user_id")
+  specializations  Json?   // ["Weight Training", "Cardio", "Yoga"]
+  certifications   Json?   // [{name, date, issuer}]
+  experienceYears  Int?    @map("experience_years")
+  bio              String?
+  maxTrainees      Int?    @map("max_trainees")
+  commissionPct    Float?  @map("commission_pct")
+  ratingAvg        Float?  @default(0) @map("rating_avg")
+  totalReviews     Int?    @default(0) @map("total_reviews")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("trainer_profiles")
+}
+
+model MembershipPlan {
+  id            String   @id @default(uuid())
+  gymId         String   @map("gym_id")
+  name          String
+  durationDays  Int      @map("duration_days")
+  price         Float
+  description   String?
+  features      Json?    // ["Access to all equipment", "Personal locker", etc.]
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  gym           Gym            @relation(fields: [gymId], references: [id])
+  subscriptions Subscription[]
+
+  @@index([gymId])
+  @@map("membership_plans")
+}
+
+model Subscription {
+  id        String             @id @default(uuid())
+  gymId     String             @map("gym_id")
+  userId    String             @map("user_id")
+  planId    String             @map("plan_id")
+  startDate DateTime           @map("start_date")
+  endDate   DateTime           @map("end_date")
+  status    SubscriptionStatus @default(active)
+  createdAt DateTime           @default(now()) @map("created_at")
+
+  gym      Gym            @relation(fields: [gymId], references: [id])
+  user     User           @relation(fields: [userId], references: [id])
+  plan     MembershipPlan @relation(fields: [planId], references: [id])
+  payments Payment[]
+  freezes  SubscriptionFreeze[]
+
+  @@index([gymId])
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  gymId          String        @map("gym_id")
+  userId         String        @map("user_id")
+  subscriptionId String?       @map("subscription_id")
+  amount         Float
+  method         PaymentMethod
+  status         PaymentStatus @default(pending)
+  transactionId  String?       @map("transaction_id")
+  notes          String?
+  paidAt         DateTime?     @map("paid_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  gym          Gym           @relation(fields: [gymId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([gymId])
+  @@index([userId])
+  @@map("payments")
+}
+
+model Attendance {
+  id              String           @id @default(uuid())
+  gymId           String           @map("gym_id")
+  userId          String           @map("user_id")
+  checkInTime     DateTime         @map("check_in_time")
+  checkOutTime    DateTime?        @map("check_out_time")
+  source          AttendanceSource @default(app_qr)
+  durationMinutes Int?             @map("duration_minutes")
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  gym  Gym  @relation(fields: [gymId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([gymId])
+  @@index([userId])
+  @@index([checkInTime])
+  @@map("attendance")
+}
+
+model Exercise {
+  id             String  @id @default(uuid())
+  gymId          String  @map("gym_id")
+  name           String
+  muscleGroup    String  @map("muscle_group")
+  equipment      String?
+  description    String?
+  imageUrl       String? @map("image_url")
+  videoUrl       String? @map("video_url")
+  isCustom       Boolean @default(true) @map("is_custom")
+
+  gym              Gym               @relation(fields: [gymId], references: [id])
+  workoutExercises WorkoutExercise[]
+
+  @@index([gymId])
+  @@index([muscleGroup])
+  @@map("exercises")
+}
+
+model WorkoutPlan {
+  id          String   @id @default(uuid())
+  gymId       String   @map("gym_id")
+  trainerId   String   @map("trainer_id")
+  traineeId   String   @map("trainee_id")
+  title       String
+  description String?
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  gym       Gym               @relation(fields: [gymId], references: [id])
+  trainer   User              @relation("TrainerWorkoutPlans", fields: [trainerId], references: [id])
+  trainee   User              @relation("TraineeWorkoutPlans", fields: [traineeId], references: [id])
+  exercises WorkoutExercise[]
+
+  @@index([gymId])
+  @@index([traineeId])
+  @@map("workout_plans")
+}
+
+model WorkoutExercise {
+  id            String  @id @default(uuid())
+  workoutPlanId String  @map("workout_plan_id")
+  exerciseId    String  @map("exercise_id")
+  dayOfWeek     DayOfWeek @map("day_of_week")
+  sets          Int
+  reps          Int
+  weight        Float?
+  restSeconds   Int?    @map("rest_seconds")
+  notes         String?
+  orderIndex    Int     @default(0) @map("order_index")
+
+  workoutPlan WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  exercise    Exercise    @relation(fields: [exerciseId], references: [id])
+
+  @@index([workoutPlanId])
+  @@map("workout_exercises")
+}
+
+model DietPlan {
+  id                  String   @id @default(uuid())
+  gymId               String   @map("gym_id")
+  trainerId           String   @map("trainer_id")
+  traineeId           String   @map("trainee_id")
+  title               String
+  description         String?
+  meals               Json?    // Structured: {breakfast: [...], lunch: [...], dinner: [...], snacks: [...]}
+  dailyCaloriesTarget Int?     @map("daily_calories_target")
+  dailyProteinTargetG Float?   @map("daily_protein_target_g")
+  startDate           DateTime? @map("start_date")
+  endDate             DateTime? @map("end_date")
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  gym     Gym  @relation(fields: [gymId], references: [id])
+  trainer User @relation("TrainerDietPlans", fields: [trainerId], references: [id])
+  trainee User @relation("TraineeDietPlans", fields: [traineeId], references: [id])
+
+  @@index([gymId])
+  @@index([traineeId])
+  @@map("diet_plans")
+}
+
+model NutritionLog {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  date        DateTime @db.Date
+  mealType    String   @map("meal_type") // breakfast, lunch, dinner, snack
+  foodName    String   @map("food_name")
+  calories    Int?
+  proteinG    Float?   @map("protein_g")
+  carbsG      Float?   @map("carbs_g")
+  fatG        Float?   @map("fat_g")
+  quantity    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, date])
+  @@map("nutrition_logs")
+}
+
+model ProgressLog {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  date           DateTime @db.Date
+  weightKg       Float?   @map("weight_kg")
+  bodyFatPct     Float?   @map("body_fat_pct")
+  chestCm        Float?   @map("chest_cm")
+  waistCm        Float?   @map("waist_cm")
+  hipsCm         Float?   @map("hips_cm")
+  bicepsCm       Float?   @map("biceps_cm")
+  thighsCm       Float?   @map("thighs_cm")
+  photoUrl       String?  @map("photo_url")
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, date])
+  @@map("progress_logs")
+}
+
+model ChatMessage {
+  id         String   @id @default(uuid())
+  gymId      String   @map("gym_id")
+  senderId   String   @map("sender_id")
+  receiverId String   @map("receiver_id")
+  message    String
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  gym      Gym  @relation(fields: [gymId], references: [id])
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([gymId])
+  @@index([senderId, receiverId])
+  @@map("chat_messages")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  gymId     String   @map("gym_id")
+  userId    String   @map("user_id")
+  title     String
+  body      String
+  type      String   // subscription_expiry, payment_reminder, workout_assigned, etc.
+  isRead    Boolean  @default(false) @map("is_read")
+  data      Json?    // Additional data payload
+  createdAt DateTime @default(now()) @map("created_at")
+
+  gym  Gym  @relation(fields: [gymId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([gymId])
+  @@index([userId])
+  @@map("notifications")
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  gymId     String   @map("gym_id")
+  title     String
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  gym Gym @relation(fields: [gymId], references: [id])
+
+  @@index([gymId])
+  @@map("announcements")
+}
+
+model TrainerSchedule {
+  id          String    @id @default(uuid())
+  trainerId   String    @map("trainer_id")
+  gymId       String    @map("gym_id")
+  dayOfWeek   DayOfWeek @map("day_of_week")
+  startTime   String    @map("start_time") // "09:00"
+  endTime     String    @map("end_time")   // "10:00"
+  isAvailable Boolean   @default(true) @map("is_available")
+
+  trainer  User           @relation(fields: [trainerId], references: [id])
+  gym      Gym            @relation(fields: [gymId], references: [id])
+  bookings SessionBooking[]
+
+  @@index([trainerId])
+  @@index([gymId])
+  @@map("trainer_schedules")
+}
+
+model SessionBooking {
+  id         String        @id @default(uuid())
+  gymId      String        @map("gym_id")
+  traineeId  String        @map("trainee_id")
+  trainerId  String        @map("trainer_id")
+  scheduleId String        @map("schedule_id")
+  date       DateTime      @db.Date
+  status     SessionStatus @default(booked)
+  notes      String?
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  gym      Gym             @relation(fields: [gymId], references: [id])
+  trainee  User            @relation("TraineeSessions", fields: [traineeId], references: [id])
+  trainer  User            @relation("TrainerSessions", fields: [trainerId], references: [id])
+  schedule TrainerSchedule @relation(fields: [scheduleId], references: [id])
+
+  @@unique([scheduleId, date])
+  @@index([gymId])
+  @@map("session_bookings")
+}
+
+model GroupClass {
+  id              String    @id @default(uuid())
+  gymId           String    @map("gym_id")
+  trainerId       String    @map("trainer_id")
+  name            String
+  description     String?
+  dayOfWeek       DayOfWeek @map("day_of_week")
+  startTime       String    @map("start_time")
+  endTime         String    @map("end_time")
+  maxParticipants Int       @map("max_participants")
+  isRecurring     Boolean   @default(true) @map("is_recurring")
+  isActive        Boolean   @default(true) @map("is_active")
+
+  gym         Gym               @relation(fields: [gymId], references: [id])
+  trainer     User              @relation(fields: [trainerId], references: [id])
+  enrollments ClassEnrollment[]
+
+  @@index([gymId])
+  @@map("group_classes")
+}
+
+model ClassEnrollment {
+  id               String   @id @default(uuid())
+  classId          String   @map("class_id")
+  userId           String   @map("user_id")
+  date             DateTime @db.Date
+  attendanceStatus String   @default("enrolled") @map("attendance_status") // enrolled, attended, missed, cancelled
+  enrolledAt       DateTime @default(now()) @map("enrolled_at")
+
+  groupClass GroupClass @relation(fields: [classId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@unique([classId, userId, date])
+  @@map("class_enrollments")
+}
+
+model FeedbackRating {
+  id        String   @id @default(uuid())
+  gymId     String   @map("gym_id")
+  traineeId String   @map("trainee_id")
+  trainerId String   @map("trainer_id")
+  rating    Int      // 1-5
+  review    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  gym     Gym  @relation(fields: [gymId], references: [id])
+  trainee User @relation("FeedbackGiver", fields: [traineeId], references: [id])
+  trainer User @relation("FeedbackReceiver", fields: [trainerId], references: [id])
+
+  @@index([gymId])
+  @@index([trainerId])
+  @@map("feedback_ratings")
+}
+
+model SubscriptionFreeze {
+  id             String      @id @default(uuid())
+  subscriptionId String      @map("subscription_id")
+  userId         String      @map("user_id")
+  freezeStart    DateTime    @map("freeze_start") @db.Date
+  freezeEnd      DateTime?   @map("freeze_end") @db.Date
+  reason         String?
+  approvedBy     String?     @map("approved_by")
+  status         FreezeStatus @default(pending)
+  daysFrozen     Int?        @map("days_frozen")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+  user         User         @relation("FreezeRequester", fields: [userId], references: [id])
+  approver     User?        @relation("FreezeApprover", fields: [approvedBy], references: [id])
+
+  @@map("subscription_freezes")
+}
+
+model ReferralReward {
+  id          String               @id @default(uuid())
+  gymId       String               @map("gym_id")
+  referrerId  String               @map("referrer_id")
+  referredId  String               @map("referred_id")
+  rewardType  ReferralRewardType   @map("reward_type")
+  rewardValue String               @map("reward_value")
+  status      ReferralRewardStatus @default(pending)
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  gym      Gym  @relation(fields: [gymId], references: [id])
+  referrer User @relation("Referrer", fields: [referrerId], references: [id])
+  referred User @relation("Referred", fields: [referredId], references: [id])
+
+  @@index([gymId])
+  @@map("referral_rewards")
+}
+
+model MarketingCampaign {
+  id              String         @id @default(uuid())
+  gymId           String         @map("gym_id")
+  name            String
+  targetCriteria  Json?          @map("target_criteria")
+  messageTemplate String         @map("message_template")
+  channel         CampaignChannel
+  discountPct     Float?         @map("discount_pct")
+  status          CampaignStatus @default(draft)
+  sentCount       Int            @default(0) @map("sent_count")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  scheduledAt     DateTime?      @map("scheduled_at")
+
+  gym Gym @relation(fields: [gymId], references: [id])
+
+  @@index([gymId])
+  @@map("marketing_campaigns")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  gymId      String   @map("gym_id")
+  userId     String   @map("user_id")
+  action     String   // "member.created", "payment.recorded", etc.
+  entityType String   @map("entity_type") // "user", "subscription", etc.
+  entityId   String?  @map("entity_id")
+  details    Json?
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  gym  Gym  @relation(fields: [gymId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([gymId])
+  @@index([userId])
+  @@index([action])
+  @@map("audit_logs")
+}
