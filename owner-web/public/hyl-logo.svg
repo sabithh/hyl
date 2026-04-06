@@ -1,0 +1,7 @@
+<svg width="220" height="64" viewBox="0 0 220 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="60" height="60" rx="18" fill="#A8F7C1"/>
+  <path d="M18 18H26V30H38V18H46V46H38V36H26V46H18V18Z" fill="#07120D"/>
+  <path d="M80 22H92L100 34L108 22H120L106 41V52H94V41L80 22Z" fill="#A8F7C1"/>
+  <path d="M126 22H138V42H158V52H126V22Z" fill="#A8F7C1"/>
+  <text x="170" y="49" fill="#9FD8B3" font-family="Arial, sans-serif" font-size="12" letter-spacing="2">OWNER</text>
+</svg>

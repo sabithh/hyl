@@ -15,8 +15,8 @@ const bodyFont = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Gym Pulse Owner Dashboard",
-  description: "Operational dashboard for owners to manage members, staff, and growth.",
+  title: "HYL Owner Dashboard",
+  description: "HYL operations dashboard for owners to manage gym growth, members, staff, and performance.",
 };
 
 export default function RootLayout({
