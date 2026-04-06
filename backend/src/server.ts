@@ -7,15 +7,43 @@ import { setupChatSocket } from './socket/chat';
 
 let httpServer: HttpServer | null = null;
 
+const connectDatabaseOnStartup = async () => {
+  if (config.skipDbConnect) {
+    logger.warn('⚠️ SKIP_DB_CONNECT=true, starting API without database connection');
+    return;
+  }
+
+  const timeoutMs = Number(process.env.DB_CONNECT_TIMEOUT_MS || 15000);
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(`Database connection timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+
+      prisma
+        .$connect()
+        .then(() => {
+          clearTimeout(timer);
+          resolve();
+        })
+        .catch((error) => {
+          clearTimeout(timer);
+          reject(error);
+        });
+    });
+
+    logger.info('✅ Database connected successfully');
+  } catch (error) {
+    logger.error(
+      '⚠️ Database connection failed during startup. API is running, but DB-backed routes may fail until connectivity is restored.',
+      error
+    );
+  }
+};
+
 const startServer = async () => {
   try {
-    if (config.skipDbConnect) {
-      logger.warn('⚠️ SKIP_DB_CONNECT=true, starting API without database connection');
-    } else {
-      await prisma.$connect();
-      logger.info('✅ Database connected successfully');
-    }
-
     // Start server
     httpServer = createServer(app);
     setupChatSocket(httpServer);
@@ -25,6 +53,8 @@ const startServer = async () => {
       logger.info(`📋 Health check: http://localhost:${config.port}/api/health`);
       logger.info(`💬 WebSocket chat namespace: /ws/chat`);
     });
+
+    await connectDatabaseOnStartup();
   } catch (error) {
     logger.error('❌ Failed to start server:', error);
     process.exit(1);
