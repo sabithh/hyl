@@ -3,14 +3,13 @@ dotenv.config();
 
 const skipDbConnect = String(process.env.SKIP_DB_CONNECT || 'false').toLowerCase() === 'true';
 const databaseUrl = process.env.DATABASE_URL || '';
-const isSupabaseDatabaseUrl =
-    databaseUrl.includes('supabase.co') || databaseUrl.includes('pooler.supabase.com');
+const isPostgresDatabaseUrl = /^postgres(?:ql)?:\/\//i.test(databaseUrl);
 const jwtSecret = process.env.JWT_SECRET;
 const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
 
-if (!skipDbConnect && (!databaseUrl || !isSupabaseDatabaseUrl)) {
+if (!skipDbConnect && (!databaseUrl || !isPostgresDatabaseUrl)) {
     throw new Error(
-        'DATABASE_URL must be a Supabase PostgreSQL URL when SKIP_DB_CONNECT is false.'
+        'DATABASE_URL must be a PostgreSQL URL when SKIP_DB_CONNECT is false.'
     );
 }
 
