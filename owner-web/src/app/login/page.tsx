@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -73,6 +74,12 @@ export default function LoginPage() {
             <div className="mt-8 space-y-2 text-sm text-[color:var(--muted)]">
               <p>Live API connected to your Render backend</p>
               <p>Branding: HYL operations workspace</p>
+              <p>
+                New gym owner?{" "}
+                <Link className="font-semibold text-[color:var(--mint)]" href="/signup">
+                  Create account
+                </Link>
+              </p>
             </div>
           </section>
 

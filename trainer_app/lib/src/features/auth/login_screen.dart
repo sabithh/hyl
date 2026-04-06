@@ -14,15 +14,22 @@ class TrainerLoginScreen extends StatefulWidget {
 }
 
 class _TrainerLoginScreenState extends State<TrainerLoginScreen> {
+  final _nameController = TextEditingController();
+  final _gymEmailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
 
+  bool _isSignUp = false;
   bool _obscurePassword = true;
   bool _isSubmitting = false;
 
   @override
   void dispose() {
+    _nameController.dispose();
+    _gymEmailController.dispose();
+    _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -40,7 +47,7 @@ class _TrainerLoginScreenState extends State<TrainerLoginScreen> {
               children: [
                 StaggeredReveal(
                   child: Text(
-                    'HYL Trainer',
+                    _isSignUp ? 'Create Trainer Account' : 'HYL Trainer',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       color: AppColors.mint,
                     ),
@@ -50,13 +57,29 @@ class _TrainerLoginScreenState extends State<TrainerLoginScreen> {
                 StaggeredReveal(
                   delay: const Duration(milliseconds: 80),
                   child: Text(
-                    'Sign in with your trainer account to access live gym data.',
+                    _isSignUp
+                        ? 'Register as a trainer using your gym email.'
+                        : 'Sign in with your trainer account to access live gym data.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: AppColors.mint.withValues(alpha: 0.82),
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
+                if (_isSignUp)
+                  StaggeredReveal(
+                    delay: const Duration(milliseconds: 120),
+                    child: TextField(
+                      controller: _nameController,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        labelText: 'Full Name',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                    ),
+                  ),
+                if (_isSignUp)
+                  const SizedBox(height: 12),
                 StaggeredReveal(
                   delay: const Duration(milliseconds: 140),
                   child: TextField(
@@ -69,6 +92,34 @@ class _TrainerLoginScreenState extends State<TrainerLoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                if (_isSignUp)
+                  StaggeredReveal(
+                    delay: const Duration(milliseconds: 170),
+                    child: TextField(
+                      controller: _gymEmailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Gym Email',
+                        prefixIcon: Icon(Icons.business_rounded),
+                      ),
+                    ),
+                  ),
+                if (_isSignUp)
+                  const SizedBox(height: 12),
+                if (_isSignUp)
+                  StaggeredReveal(
+                    delay: const Duration(milliseconds: 185),
+                    child: TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'Phone (Optional)',
+                        prefixIcon: Icon(Icons.call_outlined),
+                      ),
+                    ),
+                  ),
+                if (_isSignUp)
+                  const SizedBox(height: 12),
                 StaggeredReveal(
                   delay: const Duration(milliseconds: 200),
                   child: TextField(
@@ -103,8 +154,32 @@ class _TrainerLoginScreenState extends State<TrainerLoginScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.login_rounded),
-                      label: Text(_isSubmitting ? 'Signing in...' : 'Sign In'),
+                          : Icon(_isSignUp ? Icons.person_add_alt_1_rounded : Icons.login_rounded),
+                      label: Text(
+                        _isSubmitting
+                            ? (_isSignUp ? 'Creating account...' : 'Signing in...')
+                            : (_isSignUp ? 'Create Trainer Account' : 'Sign In'),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                StaggeredReveal(
+                  delay: const Duration(milliseconds: 300),
+                  child: Center(
+                    child: TextButton(
+                      onPressed: _isSubmitting
+                          ? null
+                          : () {
+                              setState(() {
+                                _isSignUp = !_isSignUp;
+                              });
+                            },
+                      child: Text(
+                        _isSignUp
+                            ? 'Already have a trainer account? Sign In'
+                            : 'New trainer? Create account',
+                      ),
                     ),
                   ),
                 ),
@@ -117,6 +192,9 @@ class _TrainerLoginScreenState extends State<TrainerLoginScreen> {
   }
 
   Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    final gymEmail = _gymEmailController.text.trim();
+    final phone = _phoneController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -127,14 +205,31 @@ class _TrainerLoginScreenState extends State<TrainerLoginScreen> {
       return;
     }
 
+    if (_isSignUp && (name.isEmpty || gymEmail.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name and gym email are required for sign up.')),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
-      final session = await _authService.login(
-        email: email,
-        password: password,
-        requiredRole: 'trainer',
-      );
+      final session = _isSignUp
+          ? await _authService.register(
+              gymEmail: gymEmail,
+              name: name,
+              email: email,
+              password: password,
+              role: 'trainer',
+              requiredRole: 'trainer',
+              phone: phone.isEmpty ? null : phone,
+            )
+          : await _authService.login(
+              email: email,
+              password: password,
+              requiredRole: 'trainer',
+            );
       if (!mounted) {
         return;
       }

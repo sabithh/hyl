@@ -66,44 +66,13 @@ class AuthService {
           );
 
       final data = ApiClient.unwrapData(response.data);
-      final user = data['user'] as Map<String, dynamic>? ?? <String, dynamic>{};
-
-      final accessToken = (data['accessToken'] as String?)?.trim() ?? '';
-      final refreshToken = (data['refreshToken'] as String?)?.trim() ?? '';
-      final role = (user['role'] as String?)?.trim() ?? '';
-      final userId = (user['id'] as String?)?.trim() ?? '';
-      final userName = (user['name'] as String?)?.trim() ?? '';
-      final userEmail = (user['email'] as String?)?.trim() ?? email;
-
-      if (accessToken.isEmpty ||
-          refreshToken.isEmpty ||
-          userId.isEmpty ||
-          role.isEmpty) {
-        throw Exception('Login response is missing token or user data.');
-      }
-
-      if (role != requiredRole) {
-        throw Exception('This app only supports $requiredRole accounts.');
-      }
-
-      final session = AuthSession(
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-        userId: userId,
-        userName: userName.isEmpty ? 'Trainee' : userName,
-        userEmail: userEmail,
-        role: role,
+      final session = _parseSession(
+        data: data,
+        fallbackEmail: email,
+        requiredRole: requiredRole,
+        defaultName: 'Trainee',
       );
-
-      await _sessionService.saveSession(
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken,
-        userId: session.userId,
-        userName: session.userName,
-        userEmail: session.userEmail,
-        role: session.role,
-      );
-
+      await _persistSession(session);
       return session;
     } on DioException catch (error) {
       final message =
@@ -112,8 +81,92 @@ class AuthService {
     }
   }
 
+  Future<AuthSession> register({
+    required String gymEmail,
+    required String name,
+    required String email,
+    required String password,
+    required String role,
+    required String requiredRole,
+    String? phone,
+    String? referralCode,
+  }) async {
+    try {
+      final response = await ApiClient.instance.client.post<Map<String, dynamic>>(
+        '/api/auth/register',
+        data: {
+          'gymEmail': gymEmail,
+          'name': name,
+          'email': email,
+          if (phone != null && phone.trim().isNotEmpty) 'phone': phone,
+          'password': password,
+          'role': role,
+          if (referralCode != null && referralCode.trim().isNotEmpty)
+            'referralCode': referralCode,
+        },
+      );
+
+      final data = ApiClient.unwrapData(response.data);
+      final session = _parseSession(
+        data: data,
+        fallbackEmail: email,
+        requiredRole: requiredRole,
+        defaultName: 'Trainee',
+      );
+      await _persistSession(session);
+      return session;
+    } on DioException catch (error) {
+      final message =
+          _extractApiMessage(error) ?? 'Unable to create account right now.';
+      throw Exception(message);
+    }
+  }
+
   Future<void> logout() async {
     await _sessionService.clearSession();
+  }
+
+  Future<void> _persistSession(AuthSession session) {
+    return _sessionService.saveSession(
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      userId: session.userId,
+      userName: session.userName,
+      userEmail: session.userEmail,
+      role: session.role,
+    );
+  }
+
+  static AuthSession _parseSession({
+    required Map<String, dynamic> data,
+    required String fallbackEmail,
+    required String requiredRole,
+    required String defaultName,
+  }) {
+    final user = data['user'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    final accessToken = (data['accessToken'] as String?)?.trim() ?? '';
+    final refreshToken = (data['refreshToken'] as String?)?.trim() ?? '';
+    final role = (user['role'] as String?)?.trim() ?? '';
+    final userId = (user['id'] as String?)?.trim() ?? '';
+    final userName = (user['name'] as String?)?.trim() ?? '';
+    final userEmail = (user['email'] as String?)?.trim() ?? fallbackEmail;
+
+    if (accessToken.isEmpty || refreshToken.isEmpty || userId.isEmpty || role.isEmpty) {
+      throw Exception('Auth response is missing token or user data.');
+    }
+
+    if (role != requiredRole) {
+      throw Exception('This app only supports $requiredRole accounts.');
+    }
+
+    return AuthSession(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      userId: userId,
+      userName: userName.isEmpty ? defaultName : userName,
+      userEmail: userEmail,
+      role: role,
+    );
   }
 
   static String? _extractApiMessage(DioException error) {

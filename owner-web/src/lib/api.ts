@@ -37,6 +37,21 @@ export type AuthLoginResult = {
   refreshToken: string;
 };
 
+export type CreateGymOwnerInput = {
+  gymName: string;
+  gymEmail: string;
+  gymPhone?: string;
+  gymAddress?: string;
+  gymCity?: string;
+  gymState?: string;
+  gymCountry?: string;
+  gymPincode?: string;
+  ownerName: string;
+  ownerEmail: string;
+  ownerPhone?: string;
+  ownerPassword: string;
+};
+
 export type Gym = {
   id: string;
   name: string;
@@ -53,6 +68,13 @@ export type Gym = {
     payments: number;
     attendance: number;
   };
+};
+
+export type CreateGymOwnerResult = {
+  gym: Gym;
+  user: OwnerUser;
+  accessToken: string;
+  refreshToken: string;
 };
 
 export type Member = {
@@ -276,6 +298,16 @@ export function loginOwner(email: string, password: string): Promise<AuthLoginRe
     {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    }
+  );
+}
+
+export function createGymOwnerAccount(input: CreateGymOwnerInput): Promise<CreateGymOwnerResult> {
+  return backendRequest<CreateGymOwnerResult>(
+    "/api/auth/create-gym-owner",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
     }
   );
 }
