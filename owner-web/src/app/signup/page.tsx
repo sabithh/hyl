@@ -15,11 +15,18 @@ export default function SignupPage() {
   const [ownerEmail, setOwnerEmail] = useState("");
   const [ownerPhone, setOwnerPhone] = useState("");
   const [ownerPassword, setOwnerPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (ownerPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -37,6 +44,7 @@ export default function SignupPage() {
           ownerEmail,
           ownerPhone,
           ownerPassword,
+          confirmPassword,
         }),
       });
 
@@ -166,6 +174,19 @@ export default function SignupPage() {
                   onChange={(event) => setOwnerPassword(event.target.value)}
                   className="w-full rounded-xl border border-[color:var(--line)] bg-[color:var(--panel-strong)] px-3 py-2 text-[color:var(--text)] outline-none transition focus:border-[color:var(--mint)]"
                   placeholder="At least 6 characters"
+                />
+              </label>
+
+              <label className="block text-sm">
+                <span className="mb-1 block text-[color:var(--muted)]">Confirm Password</span>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  className="w-full rounded-xl border border-[color:var(--line)] bg-[color:var(--panel-strong)] px-3 py-2 text-[color:var(--text)] outline-none transition focus:border-[color:var(--mint)]"
+                  placeholder="Re-enter your password"
                 />
               </label>
 

@@ -11,6 +11,22 @@ const queryErrorMessages: Record<string, string> = {
   "session-invalid": "Please login to continue.",
 };
 
+const getLoginErrorMessage = (status: number, fallback?: string) => {
+  if (status === 401) {
+    return "Invalid email or password.";
+  }
+
+  if (status === 403) {
+    return "Only owner accounts can access the owner dashboard.";
+  }
+
+  if (status >= 500) {
+    return "Authentication service is temporarily unavailable. Please try again.";
+  }
+
+  return fallback || "Login failed. Please verify your credentials.";
+};
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -44,7 +60,7 @@ export default function LoginPage() {
       const payload = (await response.json().catch(() => null)) as { message?: string } | null;
 
       if (!response.ok) {
-        setError(payload?.message || "Login failed. Please verify your credentials.");
+        setError(getLoginErrorMessage(response.status, payload?.message));
         setLoading(false);
         return;
       }

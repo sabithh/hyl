@@ -18,7 +18,7 @@ const requiredFields: Array<keyof CreateGymOwnerInput> = [
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as Partial<CreateGymOwnerInput>;
+    const body = (await request.json()) as Partial<CreateGymOwnerInput> & { confirmPassword?: string };
 
     for (const field of requiredFields) {
       const value = body[field];
@@ -31,6 +31,16 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+    }
+
+    if (body.confirmPassword !== undefined && body.ownerPassword !== body.confirmPassword) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Passwords do not match.",
+        },
+        { status: 400 }
+      );
     }
 
     const auth = await createGymOwnerAccount({
