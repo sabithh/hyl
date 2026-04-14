@@ -88,7 +88,7 @@ export default function LoginPage() {
               Sign in with your owner account to manage trainers, members, plans, payments, attendance, and growth.
             </p>
             <div className="mt-8 space-y-2 text-sm text-[color:var(--muted)]">
-              <p>Live API connected to your Render backend</p>
+              <p>Live API status is enabled for this workspace</p>
               <p>Branding: HYL operations workspace</p>
               <p>
                 New gym owner?{" "}

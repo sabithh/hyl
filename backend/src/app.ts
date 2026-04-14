@@ -33,6 +33,9 @@ import biRoutes from './routes/bi';
 
 const app = express();
 
+// Trust the proxy (Render) so rate limiting works correctly
+app.set('trust proxy', 1);
+
 // ==========================================
 // Global Middleware
 // ==========================================

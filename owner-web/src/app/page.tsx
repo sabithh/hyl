@@ -83,7 +83,7 @@ export default async function DashboardPage() {
   return (
     <AppShell
       title="Dashboard"
-      subtitle="Live HYL gym operations from your production backend."
+      subtitle="Live HYL gym operations at a glance."
       ownerName={session.user.name}
       gymName={gym?.name ?? "HYL"}
     >
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
       </section>
 
       <section className="mt-4">
-        <Panel title="Connectivity" subtitle="Live status of backend API connection.">
+        <Panel title="Connectivity" subtitle="Live status of service connection.">
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <span
               className={`rounded-full px-3 py-1 font-semibold ${
@@ -105,8 +105,9 @@ export default async function DashboardPage() {
             >
               {backend.message}
             </span>
-            <span className="text-[color:var(--muted)]">{backend.url}</span>
-            {backend.environment && <span className="text-[color:var(--muted)]">Environment: {backend.environment}</span>}
+            <span className="text-[color:var(--muted)]">
+              {backend.online ? "All core services are reachable." : "Some services are currently unavailable."}
+            </span>
           </div>
         </Panel>
       </section>
