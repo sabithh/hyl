@@ -100,7 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'Gym Pulse',
+                    'HYL',
                     style: textTheme.headlineMedium?.copyWith(
                       color: AppColors.mint,
                     ),

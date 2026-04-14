@@ -1,6 +1,6 @@
-# mobile_app
+# HYL Mobile App
 
-A new Flutter project.
+Combined HYL mobile app for trainer and trainee roles.
 
 ## Getting Started
 

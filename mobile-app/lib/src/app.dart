@@ -20,7 +20,7 @@ class _GymPulseRoot extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'Gym Pulse',
+      title: 'HYL',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
       routerConfig: router,

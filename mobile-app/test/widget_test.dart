@@ -7,6 +7,6 @@ void main() {
   ) async {
     await tester.pumpWidget(const GymPulseApp());
 
-    expect(find.text('Gym Pulse'), findsOneWidget);
+    expect(find.text('HYL'), findsOneWidget);
   });
 }

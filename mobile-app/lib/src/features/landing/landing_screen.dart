@@ -130,7 +130,7 @@ class _BrandMark extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Text(
-          'GYM PULSE',
+          'HYL',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: AppColors.mint,
             letterSpacing: 1.2,

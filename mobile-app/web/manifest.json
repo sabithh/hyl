@@ -1,11 +1,11 @@
 {
-    "name": "mobile_app",
-    "short_name": "mobile_app",
+    "name": "HYL",
+    "short_name": "HYL",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#07120D",
     "theme_color": "#2E5F4D",
-    "description": "A new Flutter project.",
+    "description": "HYL combined trainer and trainee app.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

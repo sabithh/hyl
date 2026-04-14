@@ -73,7 +73,7 @@ class _SplashGateScreenState extends ConsumerState<SplashGateScreen>
                   const SizedBox(height: 18),
                   const StaggeredReveal(
                     delay: Duration(milliseconds: 90),
-                    child: Text('Gym Pulse', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
+                    child: Text('HYL', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
                   ),
                   const SizedBox(height: 8),
                   Text(
