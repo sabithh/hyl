@@ -233,6 +233,7 @@ router.get('/today', ownerOnly, async (req, res, next) => {
       prisma.attendance.count({
         where: {
           gymId: authUser.gymId,
+          checkInTime: { gte: startOfDay, lt: endOfDay },
           checkOutTime: null,
         },
       }),

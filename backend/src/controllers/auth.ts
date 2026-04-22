@@ -44,9 +44,6 @@ export const authController = {
   async refresh(req: Request, res: Response, next: NextFunction) {
     try {
       const { refreshToken } = req.body;
-      if (!refreshToken) {
-        return res.status(400).json({ success: false, message: 'Refresh token is required' });
-      }
       const result = await authService.refreshToken(refreshToken);
       sendSuccess(res, result, 'Token refreshed');
     } catch (error) {

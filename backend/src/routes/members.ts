@@ -4,7 +4,7 @@ import prisma from '../config/database';
 import { authenticate } from '../middleware/auth';
 import { ownerOnly } from '../middleware/rbac';
 import { createAuditLog } from '../services/auditLog';
-import { ConflictError, ForbiddenError, NotFoundError } from '../utils/errors';
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendCreated, sendSuccess } from '../utils/response';
 import { getAuthUser, getPagination, parseOptionalNumber, toBoolean } from '../utils/request';
 
@@ -34,6 +34,8 @@ router.get('/', async (req, res, next) => {
       delete where.role;
     }
 
+    const includeTrainerProfile = where.role === 'trainer';
+
     const [members, total] = await Promise.all([
       prisma.user.findMany({
         where,
@@ -49,7 +51,7 @@ router.get('/', async (req, res, next) => {
           isActive: true,
           assignedTrainerId: true,
           joinDate: true,
-          trainerProfile: true,
+          trainerProfile: includeTrainerProfile,
         },
       }),
       prisma.user.count({ where }),
@@ -119,7 +121,7 @@ router.post('/', ownerOnly, async (req, res, next) => {
     const { name, email, password, phone, assignedTrainerId } = req.body;
 
     if (!name || !email || !password) {
-      throw new NotFoundError('name, email and password are required');
+      throw new BadRequestError('name, email and password are required');
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });

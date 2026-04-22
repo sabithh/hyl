@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../screens/auth/login_screen.dart';
+import '../screens/auth/signup_screen.dart';
 import '../screens/common/splash_gate_screen.dart';
 import '../screens/trainer/trainer_shell_screen.dart';
 import '../screens/trainer/trainee_detail_screen.dart';
@@ -24,6 +25,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (auth.status == AuthStatus.unauthenticated) {
+        if (location == '/signup') return null;
         return location == '/login' ? null : '/login';
       }
 
@@ -34,7 +36,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final home = roleRoot(role);
 
-      if (location == '/login' || location == '/splash' || location == '/') {
+      if (location == '/login' || location == '/signup' || location == '/splash' || location == '/') {   
         return home;
       }
 
@@ -51,6 +53,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashGateScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
       GoRoute(path: '/trainer', builder: (context, state) => const TrainerShellScreen()),
       GoRoute(path: '/trainee', builder: (context, state) => const TraineeShellScreen()),
       GoRoute(
@@ -64,3 +67,4 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+

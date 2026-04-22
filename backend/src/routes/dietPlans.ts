@@ -3,7 +3,7 @@ import prisma from '../config/database';
 import { authenticate } from '../middleware/auth';
 import { requireRole } from '../middleware/rbac';
 import { createAuditLog } from '../services/auditLog';
-import { ForbiddenError, NotFoundError } from '../utils/errors';
+import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendCreated, sendSuccess } from '../utils/response';
 import { getAuthUser, getPagination, optionalDate, parseOptionalNumber, toBoolean } from '../utils/request';
 
@@ -83,7 +83,7 @@ router.post('/', requireRole('trainer', 'owner'), async (req, res, next) => {
     } = req.body;
 
     if (!trainerId || !traineeId || !title) {
-      throw new NotFoundError('trainerId, traineeId and title are required');
+      throw new BadRequestError('trainerId, traineeId and title are required');
     }
 
     const [trainer, trainee] = await Promise.all([

@@ -126,6 +126,91 @@ class AuthService {
     }
   }
 
+  Future<AuthSession> signUp({
+    required String name,
+    required String email,
+    required String password,
+    required AppUserRole role,
+    required String gymEmail,
+  }) async {
+    try {
+      final response = await ApiClient.instance.client
+          .post<Map<String, dynamic>>(
+            '/api/auth/register',
+            data: {
+              'name': name,
+              'email': email,
+              'password': password,
+              'role': role.name,
+              'gymEmail': gymEmail,
+            },
+          );
+
+      final body = response.data ?? <String, dynamic>{};
+      final data = body['data'] as Map<String, dynamic>? ?? body;
+      final user = data['user'] as Map<String, dynamic>? ?? <String, dynamic>{};
+
+      final accessToken = (data['accessToken'] as String?)?.trim() ?? '';
+      final refreshToken = (data['refreshToken'] as String?)?.trim() ?? '';
+      final userRole = user['role'] as String?;
+
+      if (accessToken.isEmpty ||
+          refreshToken.isEmpty ||
+          userRole == null ||
+          userRole.isEmpty) {
+        throw Exception(
+          'Register response is missing required token or role fields.',
+        );
+      }
+
+      AppUserRole? parsedRole;
+      for (final item in AppUserRole.values) {
+        if (item.name == userRole) {
+          parsedRole = item;
+          break;
+        }
+      }
+
+      if (parsedRole == null) {
+        throw Exception('Unsupported role received from server: $userRole');
+      }
+
+      if (parsedRole != role) {
+        throw Exception('This account cannot sign in to this app mode.');
+      }
+
+      final session = AuthSession(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        role: parsedRole,
+        userName: (user['name'] as String?) ?? name,
+        userEmail: (user['email'] as String?) ?? email,
+      );
+
+      await _storage.saveSession(
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        role: session.role,
+        userName: session.userName,
+        userEmail: session.userEmail,
+      );
+
+      return session;
+    } on DioException catch (error) {
+      final data = error.response?.data;
+      if (data is Map<String, dynamic>) {
+        final message = data['message'];
+        if (message is String && message.isNotEmpty) {
+          throw Exception(message);
+        }
+      }
+
+      throw Exception(
+        'Unable to register right now. Please check your connection and try again.',
+      );
+    }
+  }
+
   Future<void> logout() async {
     await _storage.clearSession();
   }

@@ -14,10 +14,33 @@ class TraineeDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final trainee = MockData.trainees.firstWhere(
-      (item) => item.id == traineeId,
-      orElse: () => MockData.trainees.first,
-    );
+    final matches = MockData.trainees.where((item) => item.id == traineeId);
+    final trainee = matches.isNotEmpty ? matches.first : null;
+
+    if (trainee == null) {
+      return Scaffold(
+        body: AnimatedBackground(
+          child: SafeArea(
+            child: Column(
+              children: [
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back_rounded, color: AppColors.mint),
+                ),
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      'Trainee not found',
+                      style: TextStyle(color: AppColors.mint),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       body: AnimatedBackground(

@@ -87,7 +87,38 @@ class AuthController extends StateNotifier<AuthState> {
       return null;
     } catch (error) {
       state = state.copyWith(status: AuthStatus.unauthenticated, clearIdentity: true);
-      return 'Unable to sign in. Please try again.';
+      return error.toString().replaceFirst('Exception: ', '');
+    }
+  }
+
+  Future<String?> signUp({
+    required String name,
+    required String email,
+    required String password,
+    required AppUserRole role,
+    required String gymEmail,
+  }) async {
+    state = state.copyWith(status: AuthStatus.checking);
+
+    try {
+      final session = await _service.signUp(
+        name: name,
+        email: email,
+        password: password,
+        role: role,
+        gymEmail: gymEmail,
+      );
+
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        role: session.role,
+        userName: session.userName,
+        userEmail: session.userEmail,
+      );
+      return null;
+    } catch (error) {
+      state = state.copyWith(status: AuthStatus.unauthenticated, clearIdentity: true);
+      return error.toString().replaceFirst('Exception: ', '');
     }
   }
 

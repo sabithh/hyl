@@ -7,23 +7,30 @@ import 'package:mobile_app/src/core/widgets/animated_background.dart';
 import 'package:mobile_app/src/core/widgets/staggered_reveal.dart';
 import '../../providers/auth_provider.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class SignupScreen extends ConsumerStatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _gymEmailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   AppUserRole _selectedRole = AppUserRole.trainee;
   bool _obscurePassword = true;
+  bool _obscureConfirm = true;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
+    _gymEmailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -40,10 +47,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.centerLeft,
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back_rounded, color: AppColors.mint),
+                ),
                 const SizedBox(height: 8),
                 StaggeredReveal(
                   child: Text(
-                    'Sign In',
+                    'Sign Up',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       color: AppColors.mint,
                     ),
@@ -53,7 +66,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 StaggeredReveal(
                   delay: const Duration(milliseconds: 80),
                   child: Text(
-                    'Role-aware login with automatic routing to Trainer or Trainee app.',
+                    'Create an account to track your fitness journey.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: AppColors.mint.withValues(alpha: 0.82),
                     ),
@@ -69,13 +82,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 StaggeredReveal(
+                  delay: const Duration(milliseconds: 140),
+                  child: TextField(
+                    controller: _nameController,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(
+                      labelText: 'Full Name',
+                      prefixIcon: Icon(Icons.person_outline_rounded),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                StaggeredReveal(
                   delay: const Duration(milliseconds: 160),
                   child: TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
                     decoration: const InputDecoration(
-                      labelText: 'Email',
+                      labelText: 'Your Email',
                       prefixIcon: Icon(Icons.alternate_email_rounded),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                StaggeredReveal(
+                  delay: const Duration(milliseconds: 180),
+                  child: TextField(
+                    controller: _gymEmailController,
+                    keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                    decoration: const InputDecoration(
+                      labelText: 'Gym Email',
+                      helperText: 'Email address of the gym you are joining',
+                      prefixIcon: Icon(Icons.fitness_center_rounded),
                     ),
                   ),
                 ),
@@ -95,6 +135,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                StaggeredReveal(
+                  delay: const Duration(milliseconds: 250),
+                  child: TextField(
+                    controller: _confirmPasswordController,
+                    obscureText: _obscureConfirm,
+                    decoration: InputDecoration(
+                      labelText: 'Confirm Password',
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                        icon: Icon(_obscureConfirm ? Icons.visibility_rounded : Icons.visibility_off_rounded),
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
                 StaggeredReveal(
                   delay: const Duration(milliseconds: 280),
@@ -108,8 +164,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.login_rounded),
-                      label: Text(isSubmitting ? 'Signing in...' : 'Sign In'),
+                          : const Icon(Icons.person_add_rounded),
+                      label: Text(isSubmitting ? 'Signing up...' : 'Sign Up'),
                     ),
                   ),
                 ),
@@ -121,7 +177,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Don\'t have an account?',
+                          'Already have an account?',
                           style: TextStyle(
                             color: AppColors.mint.withValues(alpha: 0.8),
                           ),
@@ -129,8 +185,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         TextButton(
                           onPressed: isSubmitting
                             ? null
-                            : () => context.push('/signup'),
-                          child: const Text('Sign Up'),
+                            : () => context.pop(),
+                          child: const Text('Sign In'),
                         ),
                       ],
                     ),
@@ -145,12 +201,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
+    final name = _nameController.text.trim();
     final email = _emailController.text.trim();
+    final gymEmail = _gymEmailController.text.trim();
     final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
+    if (name.isEmpty || email.isEmpty || gymEmail.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter both email and password.')),
+        const SnackBar(content: Text('All fields are required.')),
       );
       return;
     }
@@ -162,10 +221,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    final message = await ref.read(authProvider.notifier).signIn(
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(gymEmail)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid gym email address.')),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must be at least 6 characters.')),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match.')),
+      );
+      return;
+    }
+
+    final message = await ref.read(authProvider.notifier).signUp(
+      name: name,
       email: email,
       password: password,
       role: _selectedRole,
+      gymEmail: gymEmail,
     );
 
     if (message != null && mounted) {
@@ -227,4 +309,3 @@ class _RoleToggle extends StatelessWidget {
     );
   }
 }
-

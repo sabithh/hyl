@@ -4,7 +4,7 @@ import prisma from '../config/database';
 import { authenticate } from '../middleware/auth';
 import { requireRole } from '../middleware/rbac';
 import { createAuditLog } from '../services/auditLog';
-import { ForbiddenError, NotFoundError } from '../utils/errors';
+import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { sendCreated, sendSuccess } from '../utils/response';
 import { getAuthUser, getPagination, optionalDate, parseNumber, toBoolean } from '../utils/request';
 
@@ -74,7 +74,7 @@ router.post('/', requireRole('trainer', 'owner'), async (req, res, next) => {
     const { traineeId, title, description, startDate, endDate, isActive } = req.body;
 
     if (!trainerId || !traineeId || !title) {
-      throw new NotFoundError('trainerId, traineeId and title are required');
+      throw new BadRequestError('trainerId, traineeId and title are required');
     }
 
     const [trainer, trainee] = await Promise.all([
@@ -225,7 +225,7 @@ router.post('/:id/exercises', requireRole('trainer', 'owner'), async (req, res, 
     const { exerciseId, dayOfWeek, sets, reps, weight, restSeconds, notes, orderIndex } = req.body;
 
     if (!exerciseId || !dayOfWeek || sets === undefined || reps === undefined) {
-      throw new NotFoundError('exerciseId, dayOfWeek, sets and reps are required');
+      throw new BadRequestError('exerciseId, dayOfWeek, sets and reps are required');
     }
 
     const [plan, exercise] = await Promise.all([

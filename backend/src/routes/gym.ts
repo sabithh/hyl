@@ -4,7 +4,7 @@ import prisma from '../config/database';
 import { authenticate } from '../middleware/auth';
 import { ownerOnly } from '../middleware/rbac';
 import { createAuditLog } from '../services/auditLog';
-import { ConflictError, NotFoundError } from '../utils/errors';
+import { BadRequestError, ConflictError, NotFoundError } from '../utils/errors';
 import { sendCreated, sendSuccess } from '../utils/response';
 import { getAuthUser, getPagination, parseOptionalNumber, toBoolean } from '../utils/request';
 
@@ -146,7 +146,7 @@ router.post('/members', ownerOnly, async (req, res, next) => {
     const { name, email, password, phone, role = 'trainee', assignedTrainerId } = req.body;
 
     if (!name || !email || !password) {
-      throw new NotFoundError('name, email and password are required');
+      throw new BadRequestError('name, email and password are required');
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -313,7 +313,7 @@ router.post('/trainers', ownerOnly, async (req, res, next) => {
     const { name, email, password, phone } = req.body;
 
     if (!name || !email || !password) {
-      throw new NotFoundError('name, email and password are required');
+      throw new BadRequestError('name, email and password are required');
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -362,7 +362,7 @@ router.post('/assign-trainer', ownerOnly, async (req, res, next) => {
     const { traineeId, trainerId } = req.body;
 
     if (!traineeId || !trainerId) {
-      throw new NotFoundError('traineeId and trainerId are required');
+      throw new BadRequestError('traineeId and trainerId are required');
     }
 
     const [trainee, trainer] = await Promise.all([

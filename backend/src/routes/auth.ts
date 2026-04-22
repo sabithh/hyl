@@ -6,6 +6,7 @@ import { validate } from '../middleware/validate';
 import {
   registerSchema,
   loginSchema,
+  refreshTokenSchema,
   changePasswordSchema,
   forgotPasswordSchema,
   createGymOwnerSchema,
@@ -24,7 +25,7 @@ const authLimiter = rateLimit({
 router.post('/create-gym-owner', authLimiter, validate(createGymOwnerSchema), authController.createGymOwner);
 router.post('/register', authLimiter, validate(registerSchema), authController.register);
 router.post('/login', authLimiter, validate(loginSchema), authController.login);
-router.post('/refresh', authLimiter, authController.refresh);
+router.post('/refresh', authLimiter, validate(refreshTokenSchema), authController.refresh);
 router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), authController.forgotPassword);
 router.get('/profile', authenticate, authController.getProfile);
 router.get('/me', authenticate, authController.getProfile);
