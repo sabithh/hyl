@@ -5,7 +5,7 @@ import 'dart:io';
 class BackendHealthService {
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://hyl-backend.onrender.com',
+    defaultValue: 'https://hyl.onrender.com',
   );
 
   static Future<bool> ping() async {
