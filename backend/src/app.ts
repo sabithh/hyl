@@ -45,7 +45,14 @@ app.use(helmet());
 
 // CORS
 app.use(cors({
-  origin: config.corsOrigin,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const allowed = config.corsOrigin.some(
+      (o) => o === origin || (o === 'http://localhost' && origin.startsWith('http://localhost:'))
+    );
+    if (allowed) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],

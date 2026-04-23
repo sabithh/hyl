@@ -43,8 +43,11 @@ const config = {
     // Redis
     redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
 
-    // CORS
-    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    // CORS — supports comma-separated list of origins
+    corsOrigin: (process.env.CORS_ORIGIN || 'http://localhost:3000')
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean),
 
     // Rate Limiting
     rateLimit: {
